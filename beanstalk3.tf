@@ -3,7 +3,6 @@ resource "aws_elastic_beanstalk_application" "gitbucket" {
   description = "GitBucket application deployed via Elastic Beanstalk"
 }
 
-
 resource "aws_security_group" "beanstalk_sg" {
   name        = "beanstalk-sg"
   description = "Security group for Elastic Beanstalk"
@@ -168,6 +167,15 @@ resource "aws_elastic_beanstalk_application_version" "gitbucket_version" {
   application = aws_elastic_beanstalk_application.gitbucket.name
   bucket      = "gitbucket-deploy-bucket"
   key         = "gitbucket.war"
+}
+
+# store the terraform state file in s3
+terraform {
+  backend "s3" {
+    bucket  = "gitbucket-terraform-state"
+    key     = "build/terraform.tfstate"
+    region  = "eu-central-1"
+  }
 }
 
 
