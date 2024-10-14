@@ -175,6 +175,7 @@ terraform {
     bucket  = "gitbucket-terraform-state"
     key     = "build/terraform.tfstate"
     region  = "eu-central-1"
+    profile = "Oleksandra"
   }
 }
 
