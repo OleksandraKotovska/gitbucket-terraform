@@ -1,12 +1,12 @@
 resource "aws_elastic_beanstalk_application" "gitbucket" {
-  name        = "gitbucket"
-  description = "GitBucket application deployed via Elastic Beanstalk"
+  name        = var.application_name
+  description = var.application_description
 }
 
 resource "aws_security_group" "beanstalk_sg" {
-  name        = "beanstalk-sg"
+  name        = var.security_group_name
   description = "Security group for Elastic Beanstalk"
-  vpc_id      = module.vpc.vpc_id
+  vpc_id      = var.vpc_id
 
   ingress {
     from_port   = 5000
@@ -30,10 +30,9 @@ resource "aws_security_group" "beanstalk_sg" {
   }
 
   tags = {
-    Name = "beanstalk-sg"
+    Name = var.security_group_name
   }
 }
-
 
 resource "aws_iam_role" "aws_elasticbeanstalk_ec2_role" {
   name = "aws-elasticbeanstalk-ec2-role"
@@ -80,30 +79,27 @@ resource "aws_iam_role_policy_attachment" "aws_elasticbeanstalk_service_role_pol
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSElasticBeanstalkService"
 }
 
-
-
-
 resource "aws_elastic_beanstalk_environment" "gitbucket_env" {
-  name                = "gitbucket-env"
+  name                = var.environment_name
   application         = aws_elastic_beanstalk_application.gitbucket.name
-  solution_stack_name = "64bit Amazon Linux 2023 v5.3.2 running Tomcat 9 Corretto 17"
+  solution_stack_name = var.solution_stack_name
   
   setting {
     namespace = "aws:ec2:vpc"
     name      = "VPCId"
-    value     = module.vpc.vpc_id
+    value     = var.vpc_id
   }
 
   setting {
     namespace = "aws:ec2:vpc"
     name      = "Subnets"
-    value     = join(",", module.vpc.public_subnets) 
+    value     = join(",", var.public_subnets) 
   }
 
   setting {
     namespace = "aws:ec2:vpc"
     name      = "ELBSubnets"
-    value     = join(",", module.vpc.public_subnets)  
+    value     = join(",", var.public_subnets)  
   }
 
   setting {
@@ -115,7 +111,7 @@ resource "aws_elastic_beanstalk_environment" "gitbucket_env" {
   setting {
     namespace = "aws:autoscaling:launchconfiguration"
     name      = "InstanceType"
-    value     = "t3.micro"
+    value     = var.instance_type
   }
 
   setting {
@@ -127,7 +123,7 @@ resource "aws_elastic_beanstalk_environment" "gitbucket_env" {
   setting {
     namespace = "aws:elasticbeanstalk:environment"
     name      = "EnvironmentType"
-    value     = "SingleInstance"
+    value     = var.environment_type
   }
 
   setting {
@@ -144,39 +140,11 @@ resource "aws_elastic_beanstalk_environment" "gitbucket_env" {
   
   version_label = aws_elastic_beanstalk_application_version.gitbucket_version.name
 }
-/*
-resource "aws_elastic_beanstalk_application_version" "gitbucket_version" {
-  name        = "v1"
-  application = aws_elastic_beanstalk_application.gitbucket.name
-  bucket      = aws_s3_bucket.gitbucket_war.bucket
-  key         = aws_s3_object.gitbucket_war.key
-}
-
-resource "aws_s3_bucket" "gitbucket_war" {
-  bucket = "gitbucket-deploy-bucket"
-}
-
-resource "aws_s3_object" "gitbucket_war" {
-  bucket = aws_s3_bucket.gitbucket_war.bucket
-  key    = "gitbucket.war"
-  source = var.war_file_path
-}*/
 
 resource "aws_elastic_beanstalk_application_version" "gitbucket_version" {
-  name        = "v1"
+  name        = var.version_label
   application = aws_elastic_beanstalk_application.gitbucket.name
-  bucket      = "gitbucket-deploy-bucket"
-  key         = "gitbucket.war"
+  bucket      = var.war_bucket
+  key         = var.war_key
 }
-
-# store the terraform state file in s3
-terraform {
-  backend "s3" {
-    bucket  = "gitbucket-terraform-state"
-    key     = "build/terraform.tfstate"
-    region  = "eu-central-1"
-    profile = "Oleksandra"
-  }
-}
-
 
