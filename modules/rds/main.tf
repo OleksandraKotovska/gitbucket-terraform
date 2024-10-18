@@ -63,7 +63,7 @@ resource "aws_db_instance" "myrds" {
   }
 }
 
-resource "null_resource" "create_gitbucketdb" {
+/*resource "null_resource" "create_gitbucketdb" {
   provisioner "local-exec" {
     command = <<EOT
       mysql -h ${aws_db_instance.myrds.address} -P 3306 -u ${local.db_credentials["username"]} -p"${local.db_credentials["password"]}" -e "CREATE DATABASE IF NOT EXISTS gitbucketdb;"
@@ -71,5 +71,5 @@ resource "null_resource" "create_gitbucketdb" {
   }
 
   depends_on = [aws_db_instance.myrds]
-}
+}*/
 
